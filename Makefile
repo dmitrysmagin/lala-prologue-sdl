@@ -29,6 +29,11 @@ TEST_SRC := tests/test_assets.c
 TEST_BIN := build/test_assets.exe
 TEST_LIB_SRC := src/assets.c src/txt.c src/fnt.c src/wav.c src/map_load.c src/pcx.c
 
+# ---- phase 2 tests (screen/font/render/keyboard, needs SDL) ----
+TEST2_SRC := tests/test_phase2.c
+TEST2_BIN := build/test_phase2.exe
+TEST2_LIB_SRC := src/screen.c src/font.c src/render.c src/keyboard.c src/fnt.c src/pcx.c src/assets.c src/txt.c src/map_load.c src/wav.c
+
 all: $(TARGET)
 
 build/%.o: src/%.c
@@ -50,15 +55,20 @@ assets:
 run: $(TARGET) assets
 	./$(TARGET)
 
-test: assets $(TEST_BIN)
+test: assets $(TEST_BIN) $(TEST2_BIN)
 	./$(TEST_BIN)
+	SDL_VIDEODRIVER=dummy ./$(TEST2_BIN)
 
 $(TEST_BIN): $(TEST_SRC) $(TEST_LIB_SRC)
 	mkdir -p build
 	$(CC) $(STD) $(WARN) $(OPT) -Isrc $(TEST_SRC) $(TEST_LIB_SRC) -o $@
 
+$(TEST2_BIN): $(TEST2_SRC) $(TEST2_LIB_SRC)
+	mkdir -p build
+	$(CC) $(CFLAGS) -Isrc $(TEST2_SRC) $(TEST2_LIB_SRC) -o $@ $(LIBS)
+
 clean:
-	rm -f build/*.o $(TARGET) $(TEST_BIN)
+	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN)
 
 distclean: clean
 	rm -rf $(TMPDIR_LOCAL) build

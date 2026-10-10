@@ -32,3 +32,8 @@ gcc -std=c99 -Wall -Wextra -O2 -Isrc tests\test_assets.c src\assets.c src\txt.c 
 if errorlevel 1 exit /b 1
 build\test_assets.exe
 if errorlevel 1 exit /b 1
+gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_phase2.c src\screen.c src\font.c src\render.c src\keyboard.c src\fnt.c src\pcx.c src\assets.c src\txt.c src\map_load.c src\wav.c -o build\test_phase2.exe %SDL_LIBS%
+if errorlevel 1 exit /b 1
+set SDL_VIDEODRIVER=dummy
+build\test_phase2.exe
+if errorlevel 1 exit /b 1

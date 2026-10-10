@@ -103,6 +103,8 @@ int enems_load(const char *path, EnemRaw out[ENEM_PANTS][ENEM_PER_PANT]) {
             out[i][j].x2 = v[4]; out[i][j].y2 = v[5];
             out[i][j].mx = v[6]; out[i][j].my = v[7];
             out[i][j].t = v[8];
+            out[i][j].facing = 0; out[i][j].frame = 0;
+            out[i][j].subFrame = 0; out[i][j].sprId = 0;
         }
     }
     return (n >= need) ? 0 : -1;
@@ -118,7 +120,7 @@ int hotspots_load(const char *path, HotSpotRaw out[HOTSPOT_PANTS]) {
         int y = p < n ? tmp[p++] : 0;
         int t = p < n ? tmp[p++] : 0;
         if (p < n) p++; /* dummy (chumi) */
-        out[i].x = x; out[i].y = y; out[i].t = t;
+        out[i].x = x; out[i].y = y; out[i].t = t; out[i].s = 1;
     }
     return (n >= HOTSPOT_PANTS * 4) ? HOTSPOT_PANTS : -1;
 }

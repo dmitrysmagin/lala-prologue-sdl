@@ -3,7 +3,10 @@
 
 /* TXT data loaders. Mirrors lala-js engine/map.ts parseInts() +
  * engineLoadTileProperties/SpriteProperties/SpriteMapping/Enems/HotSpots.
- * All ints are decimal, split on commas/whitespace (QB INPUT semantics). */
+ * All ints are decimal, split on commas/whitespace (QB INPUT semantics).
+ * Structs are canonical (types.h); Raw aliases keep phase-1 test compat. */
+
+#include "types.h"
 
 #define TILEPROP_MAX 256
 #define SPRPROP_MAX 256
@@ -12,10 +15,8 @@
 #define ENEM_PER_PANT 4        /* prefs.nEnems */
 #define HOTSPOT_PANTS 30
 
-typedef struct { int location; int flags; } TileProp;
-typedef struct { int off_x; int off_y; } SprProp;
-typedef struct { int x, y, x1, y1, x2, y2, mx, my, t; } EnemRaw;
-typedef struct { int x, y, t; } HotSpotRaw;
+typedef Enem EnemRaw;
+typedef HotSpot HotSpotRaw;
 
 /* Parse ints from NUL-terminated text into out[0..cap). Returns count.
  * Stops at cap; ignores non-numeric tokens like JS parseInt NaN skip. */
