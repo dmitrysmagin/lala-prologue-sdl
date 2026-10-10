@@ -1,5 +1,7 @@
-/* Phase 2 demo: TITLE.PCX via layers, FNT text, keyboard input, palette fade. */
+/* Phase 3 demo: TITLE.PCX via layers, FNT text, keyboard, palette fade,
+ * looped title music (G66A.ogg) + SFX on Enter. */
 #include "assets.h"
+#include "audio.h"
 #include "fnt.h"
 #include "font.h"
 #include "keyboard.h"
@@ -31,6 +33,17 @@ int main(int argc, char **argv) {
     printf("phase2: loaded %s (%dx%d, pal=%s)\n", path, title.width, title.height,
         title.palette ? "yes" : "no");
 
+    Audio audio;
+    int have_audio = (audio_init(&audio) == 0);
+    int have_sfx = 0;
+    if (have_audio) {
+        have_sfx = (audio_load_sfx(&audio) == SFX_NSLOTS);
+        if (audio_load_music(&audio, "MUSIC/G66A.ogg") == 0) {
+            audio_set_music_volume(&audio, 0.7f);
+            audio_play_music(&audio, -1);
+        }
+    }
+
     uint8_t pal[768];
     memset(pal, 0, sizeof(pal));
     if (title.palette) memcpy(pal, title.palette, 768);
@@ -52,15 +65,26 @@ int main(int argc, char **argv) {
     int running = 1;
     while (running) {
         kbd_poll(&kbd);
-        if (kbd.quit || kbd_just_pressed(&kbd, SC_ENTER) || kbd_is_down(&kbd, SC_ESC))
+        if (kbd.quit || kbd_is_down(&kbd, SC_ESC)) {
             running = 0;
+        } else if (kbd_just_pressed(&kbd, SC_ENTER)) {
+            if (have_sfx) {
+                audio_play_slot(&audio, SFX_OBJECT, 0, 11025);
+                SDL_Delay(150);
+            }
+            running = 0;
+        }
         kbd_clear_just(&kbd);
         screen_present(&scr);
         SDL_Delay(16);
     }
 
+    if (have_audio) {
+        audio_fade_out_music(&audio, 250);
+        audio_quit(&audio);
+    }
     pcx_free(&title);
     screen_quit(&scr);
-    printf("phase2: bye\n");
+    printf("phase3: bye\n");
     return 0;
 }

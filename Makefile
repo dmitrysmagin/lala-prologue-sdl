@@ -3,10 +3,10 @@ CC      := gcc
 STD     := -std=c99
 WARN    := -Wall -Wextra
 OPT     := -O2
-CFLAGS  := $(STD) $(WARN) $(OPT) $(shell pkg-config --cflags sdl2)
+CFLAGS  := $(STD) $(WARN) $(OPT) $(shell pkg-config --cflags sdl2 SDL2_mixer)
 # NOTE: pkg-config emits -mwindows (hides console). For dev builds we want
 # console output, so filter it out and force -mconsole.
-LIBS    := $(filter-out -mwindows,$(shell pkg-config --libs sdl2)) -mconsole
+LIBS    := $(filter-out -mwindows,$(shell pkg-config --libs sdl2 SDL2_mixer)) -mconsole
 
 # ---- local temp redirect (bug workaround, see PLAN-SDL.md §6) ----
 TMPDIR_LOCAL := .tmp
@@ -55,9 +55,15 @@ assets:
 run: $(TARGET) assets
 	./$(TARGET)
 
-test: assets $(TEST_BIN) $(TEST2_BIN)
+# ---- phase 3 tests (audio, needs SDL2_mixer) ----
+TEST3_SRC := tests/test_audio.c
+TEST3_BIN := build/test_audio.exe
+TEST3_LIB_SRC := src/audio.c src/assets.c
+
+test: assets $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN)
 	./$(TEST_BIN)
 	SDL_VIDEODRIVER=dummy ./$(TEST2_BIN)
+	SDL_AUDIODRIVER=dummy ./$(TEST3_BIN)
 
 $(TEST_BIN): $(TEST_SRC) $(TEST_LIB_SRC)
 	mkdir -p build
@@ -67,8 +73,12 @@ $(TEST2_BIN): $(TEST2_SRC) $(TEST2_LIB_SRC)
 	mkdir -p build
 	$(CC) $(CFLAGS) -Isrc $(TEST2_SRC) $(TEST2_LIB_SRC) -o $@ $(LIBS)
 
+$(TEST3_BIN): $(TEST3_SRC) $(TEST3_LIB_SRC)
+	mkdir -p build
+	$(CC) $(CFLAGS) -Isrc $(TEST3_SRC) $(TEST3_LIB_SRC) -o $@ $(LIBS)
+
 clean:
-	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN)
+	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN)
 
 distclean: clean
 	rm -rf $(TMPDIR_LOCAL) build

@@ -11,11 +11,11 @@ mkdir dist 2>nul
 
 where pkg-config >nul 2>nul
 if %ERRORLEVEL%==0 (
-  for /f "delims=" %%i in ('pkg-config --cflags sdl2') do set SDL_CFLAGS=%%i
-  for /f "delims=" %%i in ('pkg-config --libs sdl2') do set SDL_LIBS=%%i
+  for /f "delims=" %%i in ('pkg-config --cflags sdl2 SDL2_mixer') do set SDL_CFLAGS=%%i
+  for /f "delims=" %%i in ('pkg-config --libs sdl2 SDL2_mixer') do set SDL_LIBS=%%i
 ) else (
   set SDL_CFLAGS=-IC:/msys64/ucrt64/include/SDL2 -Dmain=SDL_main
-  set SDL_LIBS=-LC:/msys64/ucrt64/lib -lmingw32 -lSDL2main -lSDL2 -mconsole
+  set SDL_LIBS=-LC:/msys64/ucrt64/lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_mixer -mconsole
 )
 
 setlocal enabledelayedexpansion
@@ -36,4 +36,9 @@ gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_phase2.c src\screen
 if errorlevel 1 exit /b 1
 set SDL_VIDEODRIVER=dummy
 build\test_phase2.exe
+if errorlevel 1 exit /b 1
+gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_audio.c src\audio.c src\assets.c -o build\test_audio.exe %SDL_LIBS%
+if errorlevel 1 exit /b 1
+set SDL_AUDIODRIVER=dummy
+build\test_audio.exe
 if errorlevel 1 exit /b 1
