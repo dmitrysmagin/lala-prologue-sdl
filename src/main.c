@@ -1,19 +1,28 @@
-/* Phase 4 demo: playable flip-screen game (no title/ending yet — phase 6).
- * Controls: arrows/Ctrl jump, W+E+R cheat, ESC quits. */
+/* Phase 5 demo: playable game, both engines (no title/ending yet — phase 6).
+ * Usage: lala.exe [flip|scroll] (default: scroll, mirrors lala-js config).
+ * Controls: arrows/Ctrl jump, W+E+R cheat, D debug overlay (scroll), ESC quits. */
 #include "audio.h"
+#include "config.h"
 #include "game.h"
 
 #include <SDL.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char **argv) {
-    (void)argc; (void)argv;
+    g_config.scroll_enabled = 1; /* JS default */
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "flip") == 0) g_config.scroll_enabled = 0;
+        else if (strcmp(argv[i], "scroll") == 0) g_config.scroll_enabled = 1;
+    }
+
     Game g;
-    if (game_load(&g, "lala-sdl phase4 (flip)", 3) != 0) {
-        fprintf(stderr, "phase4: game_load failed\n");
+    if (game_load(&g, g_config.scroll_enabled ? "lala-sdl phase5 (scroll)" : "lala-sdl phase5 (flip)", 3) != 0) {
+        fprintf(stderr, "phase5: game_load failed\n");
         return 1;
     }
-    printf("phase4: tiles=%d sprites=%d map=8640 start pant=%d\n",
+    printf("phase5: engine=%s tiles=%d sprites=%d start pant=%d\n",
+        g_config.scroll_enabled ? "scroll" : "flip",
         g.n_tileprops, g.n_sprprops, (int)g.prefs.iniPant);
 
     if (g.have_audio && audio_load_music(&g.audio, "MUSIC/DESORUIN.ogg") == 0) {
@@ -22,10 +31,10 @@ int main(int argc, char **argv) {
     }
     screen_fade_in(&g.scr, g.tileset_img.palette, 10);
 
-    int res = game_run_flip(&g, 1);
+    int res = g_config.scroll_enabled ? game_run_scroll(&g) : game_run_flip(&g, 1);
     const char *name = res == -1 ? "WIN" : res == -2 ? "LOSS" :
         res == -3 ? "ENTER" : "EXIT";
-    printf("phase4: loop returned %d (%s) obj=%d keys=%d lives=%d\n",
+    printf("phase5: loop returned %d (%s) obj=%d keys=%d lives=%d\n",
         res, name, (int)g.player.objects, (int)g.player.keys, (int)g.player.lives);
 
     if (g.have_audio) {
@@ -34,6 +43,6 @@ int main(int argc, char **argv) {
     }
     screen_fade_to(&g.scr, 0, 0, 0, 10);
     game_free(&g);
-    printf("phase4: bye\n");
+    printf("phase5: bye\n");
     return 0;
 }

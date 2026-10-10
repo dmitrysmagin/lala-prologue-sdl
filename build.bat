@@ -47,3 +47,7 @@ if errorlevel 1 exit /b 1
 set SDL_VIDEODRIVER=dummy
 build\test_engine.exe
 if errorlevel 1 exit /b 1
+gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_scroll.c src\world.c src\scroll_player.c src\scroll_enemies.c src\scroll_render.c src\engine_scroll.c src\prefs.c src\config.c src\map.c src\collision.c src\player.c src\enemies.c src\screen.c src\font.c src\render.c src\keyboard.c src\fnt.c src\pcx.c src\assets.c src\txt.c src\map_load.c src\wav.c -o build\test_scroll.exe %SDL_LIBS%
+if errorlevel 1 exit /b 1
+build\test_scroll.exe
+if errorlevel 1 exit /b 1

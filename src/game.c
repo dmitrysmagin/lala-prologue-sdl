@@ -2,6 +2,7 @@
 #include "assets.h"
 #include "config.h"
 #include "engine_flip.h"
+#include "engine_scroll.h"
 #include "map.h"
 #include "map_load.h"
 #include "prefs.h"
@@ -94,6 +95,12 @@ int game_load(Game *g, const char *title, int scale) {
     g->have_audio = (audio_init(&g->audio) == 0);
     if (g->have_audio) audio_load_sfx(&g->audio);
 
+    /* pristine snapshots for per-run reset (mirrors main.ts outer loop) */
+    g->orig_map = (uint8_t *)malloc(MAP_EXPECTED_LEN);
+    if (g->orig_map) memcpy(g->orig_map, g->map, MAP_EXPECTED_LEN);
+    memcpy(g->orig_enems, g->enems, sizeof(g->enems));
+    memcpy(g->orig_hots, g->hots, sizeof(g->hots));
+
     kbd_init(&g->kbd);
     srand((unsigned)SDL_GetTicks());
     return 0;
@@ -114,10 +121,23 @@ void game_free(Game *g) {
     pcx_free(&g->backdrop_img);
     free(g->map);
     g->map = NULL;
+    free(g->orig_map);
+    g->orig_map = NULL;
+    world_free(&g->sc.world);
     screen_quit(&g->scr);
 }
 
+void game_reset_run(Game *g) {
+    if (g->orig_map) memcpy(g->map, g->orig_map, MAP_EXPECTED_LEN);
+    memcpy(g->enems, g->orig_enems, sizeof(g->enems));
+    memcpy(g->hots, g->orig_hots, sizeof(g->hots));
+    init_player(&g->player, &g->prefs);
+    init_game(&g->prefs, &g->player);
+    kbd_clear(&g->kbd);
+}
+
 int game_run_flip(Game *g, int32_t flag) {
+    game_reset_run(g);
     Engine *e = &g->eng;
     memset(e, 0, sizeof(*e));
     flip_engine_init(e);
@@ -150,4 +170,76 @@ int game_run_flip(Game *g, int32_t flag) {
     blit_backdrop(&g->scr, LAYER_3, &g->back, (int)g->prefs.screenPos.y);
 
     return (int)e->loop(e, flag);
+}
+
+/* Scroll backdrop: idx0 is transparent (mirrors scroll-game-loop blit). */
+static void blit_backdrop_trans(Screen *s, int layer, const Sheet *back, int at_y) {
+    if (!back->data) return;
+    uint8_t *dst_base = screen_layer_idx(s, layer);
+    for (int y = 0; y < back->height; y++) {
+        int py = at_y + y;
+        if (py < 0 || py >= SCREEN_HEIGHT) continue;
+        int w = back->width < SCREEN_WIDTH ? back->width : SCREEN_WIDTH;
+        const uint8_t *src = back->data + (size_t)y * back->width;
+        uint8_t *dst = dst_base + (size_t)py * SCREEN_WIDTH;
+        for (int x = 0; x < w; x++) {
+            if (src[x] == 0) continue;
+            dst[x] = src[x];
+        }
+    }
+}
+
+int game_run_scroll(Game *g) {
+    game_reset_run(g);
+
+    /* world buffer from pristine map + world-absolute enemies/hotspots */
+    if (world_build(&g->sc.world, g->map, g->tileprops, g->n_tileprops, &g->prefs) != 0) {
+        fprintf(stderr, "game_run_scroll: world_build failed\n");
+        return 0;
+    }
+    convert_enemies_to_world(g->enems, g->sc.enemies, &g->prefs);
+    convert_hotspots_to_world(g->hots, g->sc.hots, HOTSPOT_PANTS, &g->prefs);
+
+    /* player start in world-absolute coords (mirrors main.ts scroll branch) */
+    {
+        int32_t sx = g->prefs.iniPant % g->prefs.mapW;
+        int32_t sy = g->prefs.iniPant / g->prefs.mapW;
+        g->player.x = (sx * g->prefs.screenW + g->prefs.iniTX) * 16 * 64;
+        g->player.y = (sy * g->prefs.screenH + g->prefs.iniTY) * 16 * 64;
+        g->player.vx = 0;
+        g->player.vy = 0;
+    }
+
+    Engine *e = &g->eng;
+    memset(e, 0, sizeof(*e));
+    scroll_engine_init(e);
+    e->scr = &g->scr;
+    e->kbd = &g->kbd;
+    e->prefs = &g->prefs;
+    e->player = &g->player;
+    e->tileprops = g->tileprops;
+    e->n_tileprops = g->n_tileprops;
+    e->sprprops = g->sprprops;
+    e->n_sprprops = g->n_sprprops;
+    e->sprmap = g->sprmap;
+    e->tiles = &g->tiles;
+    e->sprs = &g->sprs;
+    e->back = &g->back;
+    e->map = g->map;
+    e->enems = NULL;
+    e->hots = NULL;
+    e->n_hots = 0;
+    e->buff = NULL;
+    e->font = g->have_font ? &g->font : NULL;
+    e->audio = &g->audio;
+    e->play_sfx = game_play_sfx;
+    e->stop_sfx = game_stop_sfx;
+    e->sfx_ud = &g->audio;
+    e->game_speed = g_config.game_speed;
+    e->scroll = &g->sc;
+
+    screen_clear_layer(&g->scr, LAYER_3);
+    blit_backdrop_trans(&g->scr, LAYER_3, &g->back, (int)g->prefs.screenPos.y);
+
+    return (int)e->loop(e, 1);
 }

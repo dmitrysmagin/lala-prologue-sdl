@@ -9,10 +9,13 @@
 #include "screen.h"
 #include "txt.h"
 #include "types.h"
+#include "world.h"
 
 /* Game owns all loaded data + devices. game_run_flip builds an Engine view
  * over it and runs the flip-screen loop (flag 1 = play, 0 = title demo).
- * Returns 0 (exit), -1 (win), -2 (loss), -3 (Enter in title mode). */
+ * game_run_scroll runs the smooth-scrolling engine (always gameplay).
+ * Flip returns 0 (exit), -1 (win), -2 (loss), -3 (Enter in title mode);
+ * scroll returns 0/-1/-2. */
 typedef struct {
     Prefs prefs;
     Player player;
@@ -27,6 +30,11 @@ typedef struct {
     Enem enems[ENEM_PANTS][ENEM_PER_PANT];
     HotSpot hots[HOTSPOT_PANTS];
     TileCell buff[CUR_BUFF_SIZE];
+    ScrollState sc;
+    /* pristine snapshots (engines mutate map/enemies/hotspots per run) */
+    uint8_t *orig_map;
+    Enem orig_enems[ENEM_PANTS][ENEM_PER_PANT];
+    HotSpot orig_hots[HOTSPOT_PANTS];
     Font font;
     int have_font;
     Audio audio;
@@ -38,6 +46,9 @@ typedef struct {
 
 int game_load(Game *g, const char *title, int scale);
 void game_free(Game *g);
+/* Restore pristine map/enemies/hotspots + fresh player (per-run reset). */
+void game_reset_run(Game *g);
 int game_run_flip(Game *g, int32_t flag);
+int game_run_scroll(Game *g);
 
 #endif

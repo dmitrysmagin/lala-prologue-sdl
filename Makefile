@@ -65,11 +65,17 @@ TEST4_SRC := tests/test_engine.c
 TEST4_BIN := build/test_engine.exe
 TEST4_LIB_SRC := src/prefs.c src/config.c src/map.c src/collision.c src/player.c src/enemies.c src/engine_flip.c src/screen.c src/font.c src/render.c src/keyboard.c src/fnt.c src/pcx.c src/assets.c src/txt.c src/map_load.c src/wav.c
 
-test: assets $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN)
+# ---- phase 5 tests (scroll: world/camera/physics/render, needs SDL) ----
+TEST5_SRC := tests/test_scroll.c
+TEST5_BIN := build/test_scroll.exe
+TEST5_LIB_SRC := src/world.c src/scroll_player.c src/scroll_enemies.c src/scroll_render.c src/engine_scroll.c src/prefs.c src/config.c src/map.c src/collision.c src/player.c src/enemies.c src/screen.c src/font.c src/render.c src/keyboard.c src/fnt.c src/pcx.c src/assets.c src/txt.c src/map_load.c src/wav.c
+
+test: assets $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN) $(TEST5_BIN)
 	./$(TEST_BIN)
 	SDL_VIDEODRIVER=dummy ./$(TEST2_BIN)
 	SDL_AUDIODRIVER=dummy ./$(TEST3_BIN)
 	SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./$(TEST4_BIN)
+	SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./$(TEST5_BIN)
 
 $(TEST_BIN): $(TEST_SRC) $(TEST_LIB_SRC)
 	mkdir -p build
@@ -87,8 +93,12 @@ $(TEST4_BIN): $(TEST4_SRC) $(TEST4_LIB_SRC)
 	mkdir -p build
 	$(CC) $(CFLAGS) -Isrc $(TEST4_SRC) $(TEST4_LIB_SRC) -o $@ $(LIBS)
 
+$(TEST5_BIN): $(TEST5_SRC) $(TEST5_LIB_SRC)
+	mkdir -p build
+	$(CC) $(CFLAGS) -Isrc $(TEST5_SRC) $(TEST5_LIB_SRC) -o $@ $(LIBS)
+
 clean:
-	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN)
+	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN) $(TEST5_BIN)
 
 distclean: clean
 	rm -rf $(TMPDIR_LOCAL) build
