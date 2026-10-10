@@ -52,6 +52,7 @@ struct Engine {
     int32_t nPant;                /* loop state */
     int32_t frame;
     int32_t mode;                 /* draw mode: 1 = stats HUD, 0 = title overlay */
+    int32_t debug;                /* draw debug overlay (scroll: enemy/patrol rects) */
     void *scroll;                 /* phase 5: scroll-only state */
 };
 

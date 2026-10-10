@@ -120,6 +120,22 @@ static void scroll_draw(Engine *e, int32_t frame) {
         scroll_sprite_at(e, &s->cam, (int)en->x, (int)en->y, e->sprs, (int)en->sprId);
     }
 
+    /* debug overlay, part of the pipeline: single present below (no strobe) */
+    if (e->debug) {
+        for (int i = 0; i < ENEM_PANTS * ENEM_PER_PANT; i++) {
+            Enem *en = &s->enemies[i];
+            if (en->t == 0) continue;
+            int sx = (int)en->x - (int)s->cam.x + spx;
+            int sy = (int)en->y - (int)s->cam.y + spy;
+            screen_draw_rect(scr, LAYER_1, sx, sy, sx + 15, sy + 15, 15);
+            int x1 = (int)en->x1 - (int)s->cam.x + spx;
+            int y1 = (int)en->y1 - (int)s->cam.y + spy;
+            int x2 = (int)en->x2 - (int)s->cam.x + spx + 15;
+            int y2 = (int)en->y2 - (int)s->cam.y + spy + 15;
+            screen_draw_rect(scr, LAYER_1, x1, y1, x2, y2, 6);
+        }
+    }
+
     render_print_stats(scr, pl, prefs, e->tiles, e->font);
 
     screen_copy_layer(scr, LAYER_1, VIDEO);
@@ -186,26 +202,9 @@ static int32_t scroll_loop(Engine *e, int32_t flag) {
         scroll_collect(e);
 
         e->mode = 1;
+        e->debug = debug_mode;
         e->draw(e, frame);
         e->frame = frame;
-
-        /* debug overlay: white enemy rects, pink patrol rects */
-        if (debug_mode) {
-            for (int i = 0; i < ENEM_PANTS * ENEM_PER_PANT; i++) {
-                Enem *en = &s->enemies[i];
-                if (en->t == 0) continue;
-                int sx = (int)en->x - (int)s->cam.x + (int)prefs->screenPos.x;
-                int sy = (int)en->y - (int)s->cam.y + (int)prefs->screenPos.y;
-                screen_draw_rect(e->scr, LAYER_1, sx, sy, sx + 15, sy + 15, 15);
-                int x1 = (int)en->x1 - (int)s->cam.x + (int)prefs->screenPos.x;
-                int y1 = (int)en->y1 - (int)s->cam.y + (int)prefs->screenPos.y;
-                int x2 = (int)en->x2 - (int)s->cam.x + (int)prefs->screenPos.x + 15;
-                int y2 = (int)en->y2 - (int)s->cam.y + (int)prefs->screenPos.y + 15;
-                screen_draw_rect(e->scr, LAYER_1, x1, y1, x2, y2, 6);
-            }
-            screen_copy_layer(e->scr, LAYER_1, VIDEO);
-            screen_present(e->scr);
-        }
 
         /* cheat W+E+R */
         if (kbd_is_down(kbd, SC_W) && kbd_is_down(kbd, SC_E) && kbd_is_down(kbd, SC_R)) {

@@ -327,6 +327,23 @@ int main(int argc, char **argv) {
         e.mode = 1;
         e.draw(&e, 0); /* full scroll draw, no crash */
 
+        /* debug overlay is pipeline-drawn: single synthetic enemy near the
+         * camera must leave a white rect corner in the presented frame */
+        memset(sc.enemies, 0, sizeof(sc.enemies));
+        sc.enemies[0].x = 100; sc.enemies[0].y = 800;
+        sc.enemies[0].x1 = 50; sc.enemies[0].x2 = 150;
+        sc.enemies[0].y1 = 800; sc.enemies[0].y2 = 800;
+        sc.enemies[0].t = 2;
+        e.debug = 1;
+        e.draw(&e, 0);
+        e.debug = 0;
+        {
+            /* enemy (100,800), cam (0,768), sp (0,4): white (100,36)-(115,51);
+             * assert left edge below the corner (patrol top edge crosses it) */
+            uint8_t *vv = screen_layer_idx(&scr, VIDEO);
+            CHECK(vv[(size_t)37 * SCREEN_WIDTH + 100] == 15, "debug rect in frame");
+        }
+
         /* world hotspot pickup: screen24 -> tile (11, 51) */
         pl.x = (11 * 16) << 6;
         pl.y = (51 * 16) << 6;
