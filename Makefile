@@ -24,6 +24,11 @@ TARGET  := dist/lala.exe
 ASSET_SRC := ../lala-js/public
 ASSET_DST := dist/assets
 
+# ---- phase 1 parity test (pure C, no SDL) ----
+TEST_SRC := tests/test_assets.c
+TEST_BIN := build/test_assets.exe
+TEST_LIB_SRC := src/assets.c src/txt.c src/fnt.c src/wav.c src/map_load.c src/pcx.c
+
 all: $(TARGET)
 
 build/%.o: src/%.c
@@ -45,10 +50,17 @@ assets:
 run: $(TARGET) assets
 	./$(TARGET)
 
+test: assets $(TEST_BIN)
+	./$(TEST_BIN)
+
+$(TEST_BIN): $(TEST_SRC) $(TEST_LIB_SRC)
+	mkdir -p build
+	$(CC) $(STD) $(WARN) $(OPT) -Isrc $(TEST_SRC) $(TEST_LIB_SRC) -o $@
+
 clean:
-	rm -f build/*.o $(TARGET)
+	rm -f build/*.o $(TARGET) $(TEST_BIN)
 
 distclean: clean
 	rm -rf $(TMPDIR_LOCAL) build
 
-.PHONY: all assets run clean distclean
+.PHONY: all assets run test clean distclean

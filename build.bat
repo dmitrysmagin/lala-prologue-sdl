@@ -28,3 +28,7 @@ for %%f in (src\*.c) do (
 gcc !OBJS! -o dist\lala.exe %SDL_LIBS%
 if errorlevel 1 exit /b 1
 echo Build OK: dist\lala.exe
+gcc -std=c99 -Wall -Wextra -O2 -Isrc tests\test_assets.c src\assets.c src\txt.c src\fnt.c src\wav.c src\map_load.c src\pcx.c -o build\test_assets.exe
+if errorlevel 1 exit /b 1
+build\test_assets.exe
+if errorlevel 1 exit /b 1
