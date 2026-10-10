@@ -50,7 +50,8 @@ void scroll_draw_sprite(Screen *s, int layer, const Sheet *sprs, int spr_id,
         ox = props[spr_id].off_x;
         oy = props[spr_id].off_y;
     }
-    screen_blit_sprite(s, layer, sprs, spr_id, sx - ox, sy - oy, props, n_props);
+    /* props NOT forwarded (mirrors scroll-render.ts) -> net = pos - off */
+    screen_blit_sprite(s, layer, sprs, spr_id, sx - ox, sy - oy, NULL, 0);
 }
 
 void scroll_draw_hotspots(Screen *s, const Sheet *tiles, const Prefs *prefs,

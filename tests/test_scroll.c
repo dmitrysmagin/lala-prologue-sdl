@@ -281,6 +281,23 @@ int main(int argc, char **argv) {
         scroll_draw_layer2(&scr, &sc.world, &sc.cam, &tiles, 0, LAYER_2, 0, 4);
         scroll_draw_sprite(&scr, LAYER_1, &sprs, 0, 32, 784, &sc.cam,
             sprprops, nspr, 0, 4);
+        /* regression: SPRPROP offset applied exactly once (net = pos - off).
+         * 24x24 solid sprite, off (4,8), world (100,100), cam (0,0), sp (0,4)
+         * -> top-left lands at (96,96); re-adding the offset (bug) would
+         * cover (120,100) instead. */
+        {
+            static uint8_t sol24[24 * 24];
+            memset(sol24, 7, sizeof(sol24));
+            Sheet sol = {24, 24, sol24};
+            SprProp oneprop[1] = {{4, 8}};
+            Camera zcam = {0, 0};
+            screen_clear_layer(&scr, LAYER_1);
+            scroll_draw_sprite(&scr, LAYER_1, &sol, 0, 100, 100, &zcam,
+                oneprop, 1, 0, 4);
+            uint8_t *l1 = screen_layer_idx(&scr, LAYER_1);
+            CHECK(l1[(size_t)96 * SCREEN_WIDTH + 96] == 7, "sprite net pos - off");
+            CHECK(l1[(size_t)110 * SCREEN_WIDTH + 121] == 0, "offset not re-added");
+        }
         scroll_draw_hotspots(&scr, &tiles, &prefs, sc.hots, HOTSPOT_PANTS, &sc.cam, LAYER_1);
 
         /* vtable */

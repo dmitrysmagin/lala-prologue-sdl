@@ -7,6 +7,8 @@
  * kbd_poll() drains SDL events; per-frame the caller runs:
  *   kbd_poll(&kbd); ...use is_down/just_pressed...; kbd_clear_just(&kbd); */
 #define SC_ESC 0x01
+#define SC_MINUS 0x0C /* - : game speed down */
+#define SC_EQUAL 0x0D /* = : game speed up */
 #define SC_W 0x11
 #define SC_E 0x12
 #define SC_R 0x13

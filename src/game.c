@@ -136,8 +136,18 @@ void game_reset_run(Game *g) {
     kbd_clear(&g->kbd);
 }
 
+void game_apply_palette(Game *g) {
+    if (g->tileset_img.palette) screen_set_pal(&g->scr, g->tileset_img.palette);
+    uint8_t pal[768];
+    screen_get_pal(&g->scr, pal);
+    pal[254 * 3] = 255; pal[254 * 3 + 1] = 255; pal[254 * 3 + 2] = 255;
+    pal[255 * 3] = 0; pal[255 * 3 + 1] = 0; pal[255 * 3 + 2] = 0;
+    screen_set_pal(&g->scr, pal);
+}
+
 int game_run_flip(Game *g, int32_t flag) {
     game_reset_run(g);
+    game_apply_palette(g);
     Engine *e = &g->eng;
     memset(e, 0, sizeof(*e));
     flip_engine_init(e);
@@ -191,6 +201,7 @@ static void blit_backdrop_trans(Screen *s, int layer, const Sheet *back, int at_
 
 int game_run_scroll(Game *g) {
     game_reset_run(g);
+    game_apply_palette(g);
 
     /* world buffer from pristine map + world-absolute enemies/hotspots */
     if (world_build(&g->sc.world, g->map, g->tileprops, g->n_tileprops, &g->prefs) != 0) {

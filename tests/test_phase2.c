@@ -44,6 +44,15 @@ int main(int argc, char **argv) {
     CHECK(at(&s, VIDEO, 0, 0) == 11 && at(&s, VIDEO, 2, 1) == 9, "fill_rect clips");
     screen_draw_rect(&s, LAYER_1, 0, 0, 2, 2, 5);
     CHECK(at(&s, LAYER_1, 0, 0) == 5 && at(&s, LAYER_1, 1, 1) == 0, "draw_rect");
+    /* fully off-screen rects must no-op (debug overlay draws world coords) */
+    screen_fill_rect(&s, VIDEO, 400, 10, 50, 50, 77);
+    screen_fill_rect(&s, VIDEO, -60, 10, 50, 50, 77);
+    screen_fill_rect(&s, VIDEO, 10, 300, 50, 50, 77);
+    screen_fill_rect(&s, VIDEO, 10, -60, 50, 50, 77);
+    screen_draw_rect(&s, VIDEO, 2000, 2000, 2500, 2600, 77);
+    screen_draw_rect(&s, VIDEO, -2500, -2600, -2000, -2000, 77);
+    CHECK(at(&s, VIDEO, 0, 0) == 11 && at(&s, VIDEO, 319, 199) == 0,
+        "off-screen rects no-op");
     screen_copy_layer(&s, VIDEO, LAYER_2);
     CHECK(at(&s, LAYER_2, 10, 20) == 42, "copy_layer");
 

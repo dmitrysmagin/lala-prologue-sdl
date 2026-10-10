@@ -34,7 +34,8 @@ TEST2_SRC := tests/test_phase2.c
 TEST2_BIN := build/test_phase2.exe
 TEST2_LIB_SRC := src/screen.c src/font.c src/render.c src/keyboard.c src/fnt.c src/pcx.c src/assets.c src/txt.c src/map_load.c src/wav.c
 
-all: $(TARGET)
+# runnable dist from a clean checkout: exe + assets
+all: assets $(TARGET)
 
 build/%.o: src/%.c
 	mkdir -p build
@@ -70,12 +71,18 @@ TEST5_SRC := tests/test_scroll.c
 TEST5_BIN := build/test_scroll.exe
 TEST5_LIB_SRC := src/world.c src/scroll_player.c src/scroll_enemies.c src/scroll_render.c src/engine_scroll.c src/prefs.c src/config.c src/map.c src/collision.c src/player.c src/enemies.c src/screen.c src/font.c src/render.c src/keyboard.c src/fnt.c src/pcx.c src/assets.c src/txt.c src/map_load.c src/wav.c
 
-test: assets $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN) $(TEST5_BIN)
+# ---- phase 6 tests (title/ending/speed, needs SDL) ----
+TEST6_SRC := tests/test_states.c
+TEST6_BIN := build/test_states.exe
+TEST6_LIB_SRC := $(filter-out src/main.c,$(SRC))
+
+test: assets $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN) $(TEST5_BIN) $(TEST6_BIN)
 	./$(TEST_BIN)
 	SDL_VIDEODRIVER=dummy ./$(TEST2_BIN)
 	SDL_AUDIODRIVER=dummy ./$(TEST3_BIN)
 	SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./$(TEST4_BIN)
 	SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./$(TEST5_BIN)
+	SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ./$(TEST6_BIN)
 
 $(TEST_BIN): $(TEST_SRC) $(TEST_LIB_SRC)
 	mkdir -p build
@@ -97,8 +104,12 @@ $(TEST5_BIN): $(TEST5_SRC) $(TEST5_LIB_SRC)
 	mkdir -p build
 	$(CC) $(CFLAGS) -Isrc $(TEST5_SRC) $(TEST5_LIB_SRC) -o $@ $(LIBS)
 
+$(TEST6_BIN): $(TEST6_SRC) $(TEST6_LIB_SRC)
+	mkdir -p build
+	$(CC) $(CFLAGS) -Isrc $(TEST6_SRC) $(TEST6_LIB_SRC) -o $@ $(LIBS)
+
 clean:
-	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN) $(TEST5_BIN)
+	rm -f build/*.o $(TARGET) $(TEST_BIN) $(TEST2_BIN) $(TEST3_BIN) $(TEST4_BIN) $(TEST5_BIN) $(TEST6_BIN)
 
 distclean: clean
 	rm -rf $(TMPDIR_LOCAL) build

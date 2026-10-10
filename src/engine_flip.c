@@ -33,8 +33,8 @@ static void flip_calc_frames(Engine *e) {
         e->nPant, e->sprmap, SPRMAP_LEN, e->prefs->nEnems);
 }
 
-/* Sprite blit mirroring game-loop.ts: caller subtracts SPRPROP offset, the
- * blitter adds it back (net = screenPos + pos). */
+/* Sprite blit mirroring game-loop.ts: caller subtracts the SPRPROP offset
+ * and does NOT pass props (blitter adds nothing) -> net = screenPos + pos - off. */
 static void draw_sprite_at(Engine *e, int layer, const Sheet *sheet, int sid,
     int px, int py) {
     int ox = 0, oy = 0;
@@ -44,7 +44,7 @@ static void draw_sprite_at(Engine *e, int layer, const Sheet *sheet, int sid,
     }
     screen_blit_sprite(e->scr, layer, sheet, sid,
         e->prefs->screenPos.x + px - ox, e->prefs->screenPos.y + py - oy,
-        e->sprprops, e->n_sprprops);
+        NULL, 0);
 }
 
 static void flip_draw_title_overlay(Engine *e); /* fwd */
@@ -175,6 +175,7 @@ static int32_t flip_loop(Engine *e, int32_t flag) {
 
         /* input polling lives in the render-rate domain (like DOM events) */
         kbd_poll(kbd);
+        config_poll_speed(kbd, &e->game_speed);
 
         int ticks = 0;
         while (accum >= 1.0 && ticks < 5) {

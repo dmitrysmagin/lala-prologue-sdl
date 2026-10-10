@@ -51,3 +51,7 @@ gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_scroll.c src\world.
 if errorlevel 1 exit /b 1
 build\test_scroll.exe
 if errorlevel 1 exit /b 1
+gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_states.c src\state_title.c src\state_ending.c src\game.c src\engine_flip.c src\engine_scroll.c src\world.c src\scroll_player.c src\scroll_enemies.c src\scroll_render.c src\prefs.c src\config.c src\map.c src\collision.c src\player.c src\enemies.c src\screen.c src\font.c src\render.c src\keyboard.c src\audio.c src\fnt.c src\pcx.c src\assets.c src\txt.c src\map_load.c src\wav.c -o build\test_states.exe %SDL_LIBS%
+if errorlevel 1 exit /b 1
+build\test_states.exe
+if errorlevel 1 exit /b 1

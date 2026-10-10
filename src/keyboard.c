@@ -25,6 +25,10 @@ int sdl_to_qb(int sdl_scancode) {
     case SDL_SCANCODE_D: return SC_D;
     case SDL_SCANCODE_SPACE: return SC_SPACE;
     case SDL_SCANCODE_ESCAPE: return SC_ESC;
+    case SDL_SCANCODE_MINUS:
+    case SDL_SCANCODE_KP_MINUS: return SC_MINUS;
+    case SDL_SCANCODE_EQUALS:
+    case SDL_SCANCODE_KP_PLUS: return SC_EQUAL;
     default: return -1;
     }
 }

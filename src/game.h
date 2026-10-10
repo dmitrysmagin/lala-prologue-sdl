@@ -16,7 +16,7 @@
  * game_run_scroll runs the smooth-scrolling engine (always gameplay).
  * Flip returns 0 (exit), -1 (win), -2 (loss), -3 (Enter in title mode);
  * scroll returns 0/-1/-2. */
-typedef struct {
+typedef struct Game {
     Prefs prefs;
     Player player;
     TileProp tileprops[TILEPROP_MAX];
@@ -48,6 +48,8 @@ int game_load(Game *g, const char *title, int scale);
 void game_free(Game *g);
 /* Restore pristine map/enemies/hotspots + fresh player (per-run reset). */
 void game_reset_run(Game *g);
+/* Tileset palette + forced HUD colors (call before gameplay fade-in). */
+void game_apply_palette(Game *g);
 int game_run_flip(Game *g, int32_t flag);
 int game_run_scroll(Game *g);
 

@@ -166,15 +166,34 @@ Rules:
 * `make clean` removes `build/*.o`, `dist/lala.exe`, but keeps `.tmp/`
   (with `make distclean` removing it too).
 
-## 7. Phases (after approval)
+## 7. Phases (all done)
 
-0. Skeleton: window+texture+palette, `make run` shows TITLE.PCX.
-1. Loaders: PCX/FNT/TXT/MAP unit-tested vs JS output.
-2. Screen+font+keyboard.
-3. Audio (OGG+WAV).
-4. Flip engine → playable.
-5. Scroll engine → parity (same physics, camera clamp).
-6. Title/ending states, `dist/` packaging, speed toggle.
+0. Skeleton: window+texture+palette, `make run` shows TITLE.PCX. ✅
+1. Loaders: PCX/FNT/TXT/MAP unit-tested vs JS output (`make test` phase1). ✅
+2. Screen+font+keyboard (4 layers, blitters, fades, FNT text, QB scancodes). ✅
+3. Audio: SDL2_mixer OGG music + 10 WAV slots/6 voices. ✅
+4. Flip engine → playable. ✅
+5. Scroll engine → parity (same physics, camera clamp). ✅
+6. Title/ending states, `dist/` packaging, speed toggle. ✅
+
+Sprite-offset fix (post-phase-5): engine call sites pass NULL props so the
+SPRPROP offset applies exactly once (net = pos − off), matching all five
+JS `blitSprite` call sites; regression test in test_scroll.c.
+
+## 8. Build / run / test
+
+```bat
+make          # clean-checkout build: dist/lala.exe + dist/assets
+make run      # build + run (default engine: scroll; `make run` runs ./dist/lala.exe)
+dist\lala.exe [flip|scroll]      # engine seed (title LEFT/RIGHT toggles live)
+make test     # 6 suites, ~315 checks (needs ../lala-js/public for assets)
+build.bat     # cmd.exe fallback (same targets, local .tmp temp redirect)
+```
+
+Controls: arrows/Ctrl move+jump, W+E+R cheat (+1 potion), -/= game speed
+(0.3–2.0, live), D debug overlay (scroll engine), ENTER/SPACE start,
+ESC quit. Full flow: Title → Play → Ending → Title; win (15 potions) shows
+the typewriter ending, loss shows GAME OVER (scroll: 2 s, then title).
 
 Risks: OGG total ~7 MB (fine); WAV pitch-shift semantic loss (minor);
 `ENEMS.TXT` inverted bounds (`x1>x2`) — keep `===` bounce verbatim.

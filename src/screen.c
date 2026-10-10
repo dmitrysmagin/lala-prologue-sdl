@@ -82,6 +82,7 @@ void screen_fill_rect(Screen *s, int layer, int x, int y, int w, int h, uint8_t 
     int x0 = x < 0 ? 0 : x, y0 = y < 0 ? 0 : y;
     int x1 = x + w > SCREEN_WIDTH ? SCREEN_WIDTH : x + w;
     int y1 = y + h > SCREEN_HEIGHT ? SCREEN_HEIGHT : y + h;
+    if (x0 >= x1 || y0 >= y1) return; /* fully off-screen */
     for (int py = y0; py < y1; py++)
         memset(s->idx[layer] + (size_t)py * SCREEN_WIDTH + x0, ci, (size_t)(x1 - x0));
 }

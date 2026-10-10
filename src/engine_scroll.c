@@ -1,4 +1,5 @@
 #include "engine_scroll.h"
+#include "config.h"
 #include "enemies.h"
 #include "font.h"
 #include "render.h"
@@ -75,7 +76,8 @@ void scroll_collect(Engine *e) {
     }
 }
 
-/* Sprite helper: same subtract-then-add pattern as flip (net = screen pos). */
+/* Sprite helper: caller subtracts SPRPROP offset, props NOT passed
+ * (mirrors scroll-game-loop.ts) -> net = screen pos - off. */
 static void scroll_sprite_at(Engine *e, const Camera *cam, int world_x, int world_y,
     const Sheet *sheet, int sid) {
     int ox = 0, oy = 0;
@@ -87,7 +89,7 @@ static void scroll_sprite_at(Engine *e, const Camera *cam, int world_x, int worl
     int sy = world_y - (int)cam->y + e->prefs->screenPos.y;
     if (sx < -24 || sx > 320 || sy < -24 || sy > 200) return;
     screen_blit_sprite(e->scr, LAYER_1, sheet, sid,
-        sx - ox, sy - oy, e->sprprops, e->n_sprprops);
+        sx - ox, sy - oy, NULL, 0);
 }
 
 static void scroll_draw(Engine *e, int32_t frame) {
@@ -157,6 +159,7 @@ static int32_t scroll_loop(Engine *e, int32_t flag) {
         accum += dt * 60.0 * e->game_speed;
 
         kbd_poll(kbd);
+        config_poll_speed(kbd, &e->game_speed);
 
         /* debug overlay toggle (D key, edge-triggered) */
         {
