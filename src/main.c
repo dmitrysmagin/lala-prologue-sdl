@@ -1,90 +1,39 @@
-/* Phase 3 demo: TITLE.PCX via layers, FNT text, keyboard, palette fade,
- * looped title music (G66A.ogg) + SFX on Enter. */
-#include "assets.h"
+/* Phase 4 demo: playable flip-screen game (no title/ending yet — phase 6).
+ * Controls: arrows/Ctrl jump, W+E+R cheat, ESC quits. */
 #include "audio.h"
-#include "fnt.h"
-#include "font.h"
-#include "keyboard.h"
-#include "pcx.h"
-#include "screen.h"
+#include "game.h"
 
 #include <SDL.h>
 #include <stdio.h>
-#include <string.h>
 
 int main(int argc, char **argv) {
     (void)argc; (void)argv;
-    Screen scr;
-    if (screen_init(&scr, "lala-sdl phase2", 3) != 0) return 1;
-
-    char path[512];
-    if (!resolve_asset("GFX/TITLE.PCX", path, sizeof(path))) {
-        fprintf(stderr, "phase2: TITLE.PCX not found (hint: run `make assets`)\n");
-        screen_quit(&scr);
+    Game g;
+    if (game_load(&g, "lala-sdl phase4 (flip)", 3) != 0) {
+        fprintf(stderr, "phase4: game_load failed\n");
         return 1;
     }
-    PcxImage title;
-    memset(&title, 0, sizeof(title));
-    if (pcx_load_file(path, &title) != 0) {
-        fprintf(stderr, "phase2: could not decode %s\n", path);
-        screen_quit(&scr);
-        return 1;
+    printf("phase4: tiles=%d sprites=%d map=8640 start pant=%d\n",
+        g.n_tileprops, g.n_sprprops, (int)g.prefs.iniPant);
+
+    if (g.have_audio && audio_load_music(&g.audio, "MUSIC/DESORUIN.ogg") == 0) {
+        audio_set_music_volume(&g.audio, 0.7f);
+        audio_play_music(&g.audio, -1);
     }
-    printf("phase2: loaded %s (%dx%d, pal=%s)\n", path, title.width, title.height,
-        title.palette ? "yes" : "no");
+    screen_fade_in(&g.scr, g.tileset_img.palette, 10);
 
-    Audio audio;
-    int have_audio = (audio_init(&audio) == 0);
-    int have_sfx = 0;
-    if (have_audio) {
-        have_sfx = (audio_load_sfx(&audio) == SFX_NSLOTS);
-        if (audio_load_music(&audio, "MUSIC/G66A.ogg") == 0) {
-            audio_set_music_volume(&audio, 0.7f);
-            audio_play_music(&audio, -1);
-        }
+    int res = game_run_flip(&g, 1);
+    const char *name = res == -1 ? "WIN" : res == -2 ? "LOSS" :
+        res == -3 ? "ENTER" : "EXIT";
+    printf("phase4: loop returned %d (%s) obj=%d keys=%d lives=%d\n",
+        res, name, (int)g.player.objects, (int)g.player.keys, (int)g.player.lives);
+
+    if (g.have_audio) {
+        audio_fade_out_music(&g.audio, 250);
+        audio_stop_all(&g.audio);
     }
-
-    uint8_t pal[768];
-    memset(pal, 0, sizeof(pal));
-    if (title.palette) memcpy(pal, title.palette, 768);
-    screen_load_indices(&scr, LAYER_3, title.data, title.width, title.height);
-    screen_copy_layer(&scr, LAYER_3, VIDEO);
-
-    Font font;
-    int have_font = 0;
-    if (resolve_asset("GFX/lala.fnt", path, sizeof(path)) &&
-        fnt_load_file(path, &font) == 0) {
-        have_font = 1;
-    }
-
-    screen_fade_in(&scr, pal, 10);
-    if (have_font) engine_rprint(&scr, VIDEO, &font, "PRESS ENTER", 120, 180);
-
-    Keyboard kbd;
-    kbd_init(&kbd);
-    int running = 1;
-    while (running) {
-        kbd_poll(&kbd);
-        if (kbd.quit || kbd_is_down(&kbd, SC_ESC)) {
-            running = 0;
-        } else if (kbd_just_pressed(&kbd, SC_ENTER)) {
-            if (have_sfx) {
-                audio_play_slot(&audio, SFX_OBJECT, 0, 11025);
-                SDL_Delay(150);
-            }
-            running = 0;
-        }
-        kbd_clear_just(&kbd);
-        screen_present(&scr);
-        SDL_Delay(16);
-    }
-
-    if (have_audio) {
-        audio_fade_out_music(&audio, 250);
-        audio_quit(&audio);
-    }
-    pcx_free(&title);
-    screen_quit(&scr);
-    printf("phase3: bye\n");
+    screen_fade_to(&g.scr, 0, 0, 0, 10);
+    game_free(&g);
+    printf("phase4: bye\n");
     return 0;
 }

@@ -76,6 +76,17 @@ typedef struct {
 
 typedef struct { int32_t x, y, t, s; } HotSpot;
 
+/* Flip-screen tile buffer cell (mirrors TypeTileLayers). Letterboxed
+ * 22x14 = 308 entries; visible 20x12 (1-tile border simplifies collision). */
+typedef struct {
+    uint8_t layer1, layer2, behaviour, anim;
+    int32_t realMapIndex;
+} TileCell;
+
+#define CUR_BUFF_W 22
+#define CUR_BUFF_H 14
+#define CUR_BUFF_SIZE (CUR_BUFF_W * CUR_BUFF_H) /* 308 */
+
 /* Indexed pixel sheet (tileset 16px tiles / spriteset 24px sprites /
  * backdrop). Palette lives in Screen. */
 typedef struct {

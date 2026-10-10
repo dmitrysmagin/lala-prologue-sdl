@@ -42,3 +42,8 @@ if errorlevel 1 exit /b 1
 set SDL_AUDIODRIVER=dummy
 build\test_audio.exe
 if errorlevel 1 exit /b 1
+gcc -std=c99 -Wall -Wextra -O2 %SDL_CFLAGS% -Isrc tests\test_engine.c src\prefs.c src\config.c src\map.c src\collision.c src\player.c src\enemies.c src\engine_flip.c src\screen.c src\font.c src\render.c src\keyboard.c src\fnt.c src\pcx.c src\assets.c src\txt.c src\map_load.c src\wav.c -o build\test_engine.exe %SDL_LIBS%
+if errorlevel 1 exit /b 1
+set SDL_VIDEODRIVER=dummy
+build\test_engine.exe
+if errorlevel 1 exit /b 1
